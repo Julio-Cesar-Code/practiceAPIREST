@@ -1,0 +1,1 @@
+console.log('Se aproxima la calidad')
