@@ -222,4 +222,5 @@ async function getRetaledMoviesById(id) {
     const relatedMovies = data.results;
 
     CreateMovies(relatedMovies, relatedMoviesContainer)
+    relatedMoviesContainer.scrollTo(0, 0);
 }
