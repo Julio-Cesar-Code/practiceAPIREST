@@ -11,7 +11,18 @@ const APIAXIOS = axios.create({
     },
 });
 //Utils
-function CreateMovies(movies, container) {
+
+
+const LazyLoader = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+            const url = entry.target.getAttribute('data-src');
+            entry.target.setAttribute('src', url)
+            
+        }
+    })
+});
+function CreateMovies(movies, container, LazyLoad=false) {
     container.innerHTML=''
     movies.forEach(element => {
         //const articleContainer = document.createElement('article');
@@ -26,11 +37,18 @@ function CreateMovies(movies, container) {
         movieImg.classList.add('movie-img');
         movieImg.setAttribute('alt', element.title)
         movieImg.setAttribute(
-            'src',
+            LazyLoad? 'data-src':'src',
             `https://image.tmdb.org/t/p/w300/${element.poster_path}`);
-        movieContainer.appendChild(movieImg);
+        movieImg.addEventListener('error', () => {
+            movieImg.setAttribute('src','https://static.platzi.com/static/images/error/img404.png')
+        })
+        movieContainer.appendChild(movieImg);   	
         //articleContainer.appendChild(movieContainer);
         //moviesList.push(movieContainer);
+        
+        if (LazyLoad) {
+            LazyLoader.observe(movieImg);
+        }
         
         container.appendChild(movieContainer);
     });
@@ -115,7 +133,7 @@ async function getTrendingMoviesPreview() {
     // });
 
 
-    CreateMovies(movies, TrendingPreviewMoviesContainer);
+    CreateMovies(movies, TrendingPreviewMoviesContainer, true);
 
 
     
