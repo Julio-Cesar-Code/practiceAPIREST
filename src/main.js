@@ -22,8 +22,19 @@ const LazyLoader = new IntersectionObserver((entries) => {
         }
     })
 });
-function CreateMovies(movies, container, LazyLoad=false) {
-    container.innerHTML=''
+function CreateMovies(
+    movies,
+    container,
+    {
+    LazyLoad =false,
+    clean = true
+    }={}) {
+    
+    
+    if (clean) {
+        container.innerHTML = ''
+        
+    }
     movies.forEach(element => {
         //const articleContainer = document.createElement('article');
         //articleContainer.classList.add('trendingPreview-movieList')
@@ -81,6 +92,7 @@ async function getTrendingMovies() {
     
     const movies = data.results;
     console.log(data, movies);
+    maxPage = data.total_pages;
     // TrendingPreviewMoviesContainer.innerHTML = '';
     // movies.forEach(element => {
     //     //const articleContainer = document.createElement('article');
@@ -102,11 +114,51 @@ async function getTrendingMovies() {
     // });
 
 
-    CreateMovies(movies, genericSection);
+    CreateMovies(movies, genericSection, {LazyLoad:true, clean:true});
 
+    // const btnLoadMore = document.createElement('button');
+    // btnLoadMore.innerHTML = 'Cargar la calidad';
+    // btnLoadMore.addEventListener('click', getPaginatedTrendingMovies)
+    // genericSection.appendChild(btnLoadMore);
 
     
 }
+
+
+
+async function getPaginatedTrendingMovies() {
+
+    const {
+        scrollTop,
+        scrollHeight,
+        clientHeight
+    } = document.documentElement;
+    
+    const scrollIsBottom = (scrollTop + clientHeight) >= (scrollHeight - 15);
+
+    const pageIsNotMax = page < maxPage;
+
+
+    if (scrollIsBottom && pageIsNotMax) {
+        page++;
+        const { data } = await APIAXIOS('trending/movie/day', {
+            params: {
+                page,
+            },
+        });
+        
+        const movies = data.results;
+        console.log(data, movies);
+        CreateMovies(movies, genericSection, { LazyLoad: true, clean: false });
+    }
+
+
+    // const btnLoadMore = document.createElement('button');
+    // btnLoadMore.innerHTML = 'Cargar la calidad';
+    // btnLoadMore.addEventListener('click', getPaginatedTrendingMovies)
+    // genericSection.appendChild(btnLoadMore);
+}
+
 async function getTrendingMoviesPreview() {
     const {data} = await APIAXIOS('trending/movie/day');
     
@@ -114,31 +166,31 @@ async function getTrendingMoviesPreview() {
     console.log(data, movies);
     // TrendingPreviewMoviesContainer.innerHTML = '';
     // movies.forEach(element => {
-    //     //const articleContainer = document.createElement('article');
-    //     //articleContainer.classList.add('trendingPreview-movieList')
-    //     const movieContainer = document.createElement('div');
-    //     movieContainer.classList.add('movie-container');
-
-    //     const movieImg = document.createElement('img');
-    //     movieImg.classList.add('movie-img');
-    //     movieImg.setAttribute('alt', element.title)
-    //     movieImg.setAttribute(
-    //         'src',
-    //         `https://image.tmdb.org/t/p/w300/${element.poster_path}`);
-    //     movieContainer.appendChild(movieImg);
-    //     //articleContainer.appendChild(movieContainer);
-    //     //moviesList.push(movieContainer);
+        //     //const articleContainer = document.createElement('article');
+        //     //articleContainer.classList.add('trendingPreview-movieList')
+        //     const movieContainer = document.createElement('div');
+        //     movieContainer.classList.add('movie-container');
         
-    //     TrendingPreviewMoviesContainer.appendChild(movieContainer);
-    // });
-
-
-    CreateMovies(movies, TrendingPreviewMoviesContainer, true);
-
-
-    
-}
-async function getCategoriesPreview() {
+        //     const movieImg = document.createElement('img');
+        //     movieImg.classList.add('movie-img');
+        //     movieImg.setAttribute('alt', element.title)
+        //     movieImg.setAttribute(
+            //         'src',
+            //         `https://image.tmdb.org/t/p/w300/${element.poster_path}`);
+            //     movieContainer.appendChild(movieImg);
+            //     //articleContainer.appendChild(movieContainer);
+            //     //moviesList.push(movieContainer);
+            
+            //     TrendingPreviewMoviesContainer.appendChild(movieContainer);
+            // });
+            
+            
+            CreateMovies(movies, TrendingPreviewMoviesContainer, true);
+            
+            
+            
+        }
+        async function getCategoriesPreview() {
     const {data} = await APIAXIOS(`genre/movie/list`);
     //onst data = await response.json();
     const categories = data.genres;
@@ -153,18 +205,18 @@ async function getCategoriesPreview() {
     articleCategoryContainer.classList.add('categoriesPreview-list')
     categoriesContainer.appendChild(articleCategoryContainer);
     CreateCategories(categories, categoriesContainer);
-
-
-
-
-
-
+    
+    
+    
+    
+    
+    
     
 }
 
 
 async function getMOviesbySearch(query) { 
-
+    
     const { data } = await APIAXIOS('search/movie',{
         params: {
             query,
@@ -172,11 +224,49 @@ async function getMOviesbySearch(query) {
     });
     
     const movies = data.results;
+    maxPage = data.total_pages;
     console.log(data, movies);
     CreateMovies(movies, genericSection);
+    console.log(maxPage)
     
 }
 
+function getPaginatedMoviesBySearch(query) {
+    return async function () {
+            
+        const {
+            scrollTop,
+            scrollHeight,
+            clientHeight
+        } = document.documentElement;
+        
+        const scrollIsBottom = (scrollTop + clientHeight) >= (scrollHeight - 15);
+        
+        const pageIsNotMax = page < maxPage;
+        console.log(page);
+        //console.log(maxPag)
+        //console.log(pageIsNotMax)
+        
+        if (scrollIsBottom && pageIsNotMax) {
+            console.log('calidad')
+            page++;
+            const { data } = await APIAXIOS('search/movie',{
+        params: {
+                    query,
+                    page,
+        }
+    });
+    
+    const movies = data.results;
+    console.log(data, movies);
+    CreateMovies(movies, genericSection, {LazyLoad:true, clean:false});
+        }
+    
+    
+        
+        }
+    
+    }
 async function getMoviesByCategory(id) {
     const { data } = await APIAXIOS('discover/movie',{
         params: {
@@ -185,8 +275,9 @@ async function getMoviesByCategory(id) {
     });
     
     const movies = data.results;
+    maxPage = data.total_pages;
     console.log(data, movies);
-    CreateMovies(movies, genericSection);
+    CreateMovies(movies, genericSection, {LazyLoad:true, clean:false});
     // genericSection.innerHTML = '';
     // movies.forEach(element => {
     //     //const articleContainer = document.createElement('article');
@@ -213,6 +304,42 @@ async function getMoviesByCategory(id) {
 
     
 }
+function getPaginatedMoviesByCategory(id) {
+    return async function () {
+            
+        const {
+            scrollTop,
+            scrollHeight,
+            clientHeight
+        } = document.documentElement;
+        
+        const scrollIsBottom = (scrollTop + clientHeight) >= (scrollHeight - 15);
+        
+        const pageIsNotMax = page < maxPage;
+        console.log(page);
+        //console.log(maxPag)
+        //console.log(pageIsNotMax)
+        
+        if (scrollIsBottom && pageIsNotMax) {
+            console.log('calidad')
+            page++;
+            const { data } = await APIAXIOS('discover/movie',{
+        params: {
+                    with_genres: id,
+                    page,
+        }
+    });
+    
+    const movies = data.results;
+    console.log(data, movies);
+    CreateMovies(movies, genericSection, {LazyLoad:true, clean:false});
+        }
+    
+    
+        
+        }
+    
+    }
 async function getMovieId(id) {
     const { data:movie } = await APIAXIOS('movie/' + id);
     const movieImgURL = 'https://image.tmdb.org/t/p/w500' + movie.poster_path;
